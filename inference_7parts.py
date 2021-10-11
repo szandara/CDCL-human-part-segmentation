@@ -17,7 +17,7 @@ import cv2
 import math
 import time
 import numpy as np
-import util
+#import util
 from config_reader import config_reader
 from scipy.ndimage.filters import gaussian_filter
 from keras.models import load_model
@@ -28,7 +28,8 @@ from PIL import Image
 from tqdm import tqdm
 from model_simulated_RGB101_cdcl_pascal import get_testing_model_resnet101
 from human_seg.pascal_voc_human_seg_gt_7parts import human_seg_combine_argmax, human_seg_combine_argmax_rgb
-
+import onnx
+import tf2onnx
 
 human_part = [0,1,2,3,4,5,6]
 human_ori_part = [0,1,2,3,4,5,6]
@@ -63,15 +64,15 @@ def process (input_image, params, model_params):
 
     seg_avg = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
 
-    segmap_scale1 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
-    segmap_scale2 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
-    segmap_scale3 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
-    segmap_scale4 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale1 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale2 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale3 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale4 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
 
-    segmap_scale5 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
-    segmap_scale6 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
-    segmap_scale7 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
-    segmap_scale8 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale5 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale6 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale7 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
+    # segmap_scale8 = np.zeros((oriImg.shape[0], oriImg.shape[1], seg_num))
 
     for m in range(len(multiplier)):
         scale = multiplier[m]
@@ -88,6 +89,11 @@ def process (input_image, params, model_params):
         input_img = imageToTest[np.newaxis, ...]
         
         print( "\t[Original] Actual size fed into NN: ", input_img.shape)
+
+        
+        model_proto, _ = tf2onnx.convert.from_keras(model, opset=13, output_path="./cdcltf.onnx")
+        asd
+        output_blobs = model.predict(input_img)
 
         output_blobs = model.predict(input_img)
 
@@ -121,6 +127,12 @@ def process (input_image, params, model_params):
         imageToTest_padded = np.pad(imageToTest, ((0, pad[2]), (0, pad[3]), (0, 0)), mode='constant', constant_values=((0, 0), (0, 0), (0, 0)))
         input_img = imageToTest[np.newaxis, ...]
         print( "\t[Flipping] Actual size fed into NN: ", input_img.shape)
+
+        #onnx_model = keras2onnx.convert_keras(model, model.name)
+        #onnx.save_model(onnx_model, "cdcl.onnx")
+        
+        model_proto, _ = tf2onnx.convert.from_keras(model, opset=13, output_path="./cdcltf.onnx")
+        asd
         output_blobs = model.predict(input_img)
 
         # extract outputs, resize, and remove padding
